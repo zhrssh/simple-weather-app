@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Weather App{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/weather.css') }}" />
+</head>
+<body>
+  <div id="app">
+    <h1>Weather</h1>
+
+    <div class="search-row">
+      <input type="text" id="city-input" placeholder="Enter city name..." />
+      <button id="search-btn">Search</button>
+    </div>
+
+    <div id="error"></div>
+    <div id="loading">Fetching weather...</div>
+
+    <div id="results">
+      <div class="card">
+        <div class="city-name" id="city-label"></div>
+        <div class="condition" id="condition-label"></div>
+        <div class="temp-row">
+          <div class="temp-big" id="temp-label"></div>
+          <img class="weather-icon" id="weather-icon" src="" alt="weather icon" />
+        </div>
+        <div class="meta-grid">
+          <div class="meta-card">
+            <div class="meta-label">Humidity</div>
+            <div class="meta-value" id="humidity-label"></div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Wind speed</div>
+            <div class="meta-value" id="wind-label"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="forecast-title">5-day forecast</div>
+        <div class="forecast-grid" id="forecast-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/weather.js') }}"></script>
+</body>
+</html>
+
