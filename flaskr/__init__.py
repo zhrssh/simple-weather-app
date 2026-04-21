@@ -4,11 +4,13 @@ import os
 from flask import abort, Flask, jsonify, render_template, request
 from flaskr import status
 from flaskr.helper import getLongAndLat, getForecastData, getWeatherData
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 def create_app(test_config=None):
     # Create and configure the app
     app = Flask(__name__, instance_relative_config=True)
+    app.wsgi_app = ProxyFix(app.wsgi_app)
     if test_config is None:
         app.config.from_object(config.Config())
     else:
