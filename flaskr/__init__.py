@@ -5,6 +5,7 @@ from flask import abort, Flask, jsonify, render_template, request
 from flaskr import status
 from flaskr.helper import getLongAndLat, getForecastData, getWeatherData
 
+
 def create_app(test_config=None):
     # Create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -52,6 +53,3 @@ def create_app(test_config=None):
         return jsonify(data), status.HTTP_OK_200
 
     return app
-
-
-
