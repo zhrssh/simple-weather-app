@@ -31,7 +31,7 @@ async function fetchWeather(city) {
     // Get geocode data
     const geoRes = await fetch(`/api/geocode?city=${encodeURIComponent(city)}`);
     if (!geoRes.ok) {
-      const e = await curRes.json();
+      const e = await geoRes.json();
       throw new Error(e.message || "City not found");
     }
     const geoData = (await geoRes.json())[0];
