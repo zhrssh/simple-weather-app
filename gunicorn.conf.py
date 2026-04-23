@@ -1,0 +1,9 @@
+worker_class = "gthread"
+workers = 2
+threads = 4
+worker_tmp_dir = "/dev/shm"
+bind = "0.0.0.0:5000"
+accesslog = "-"
+errorlog = "-"
+timeout = 30
+keepalive = 2

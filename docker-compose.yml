@@ -1,16 +1,35 @@
 ---
 services:
-  app:
+  server:
     build: .
     image: weather-app:latest
+    command:
+      - gunicorn
+      - -c
+      - ./gunicorn.conf.py
+      - flaskr:create_app()
     ports:
-      - "5000:5000"
+      - "5000-5001:5000"
     environment:
       - SERVER_SECRET_KEY_FILE=/run/secrets/server_secret
       - WEATHER_API_KEY_FILE=/run/secrets/api_key
     secrets:
       - server_secret
       - api_key
+    deploy:
+      replicas: 2
+      endpoint_mode: vip
+      resources:
+        limits:
+          cpus: "0.40"
+          memory: 200M
+        reservations:
+          cpus: "0.20"
+          memory: 100M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
 
 secrets:
   server_secret:

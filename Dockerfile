@@ -26,6 +26,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Install source
 COPY . /app
+RUN mkdir -p /app/instance && \
+    chown -R appuser:appgroup /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
@@ -39,4 +41,4 @@ ENTRYPOINT []
 USER appuser
 
 # NOTE: Change to a WSGI server later
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "flaskr:create_app()"]
+CMD ["gunicorn", "-c", "./gunicorn.conf.py", "flaskr:create_app()"]
