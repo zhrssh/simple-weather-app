@@ -3,24 +3,69 @@ services:
   traefik:
     image: "traefik:v3.7.0-rc.2"
     container_name: "traefik"
+    restart: on-failure
+    networks:
+      - proxy
     command:
-      - "--api.insecure=true"
+      # API & Dashboard
+      - "--api.insecure=false"
+      - "--api.dashboard=true"
+
+      # Attach the static configuration tls.yaml file that contains the tls configuration settings
+      - "--providers.file.filename=/dynamic/tls.yaml"
+
+      # Providers
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=proxy"
+
+      # Entrypoints
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls=true"
+
+      # Observability
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--metrics.prometheus=true"
+
+    # Traefik Dynamic configuration via Docker labels
+    labels:
+      - "traefik.enable=true"
+
+      # Dashboard router
+      - "traefik.http.routers.dashboard.rule=Host(`dashboard.gamma.localhost`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+
+      # Basic‑auth middleware
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$hwFVINtK$$mzCXQdJsbPuQd.uTSRsAM1"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth@docker"
     ports:
       - "80:80"
-      - "8080:8080"
+      - "443:443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./certs:/certs:ro"
+      - "./dynamic:/dynamic:ro"
+    security_opt:
+      - no-new-privileges:true
 
   server:
     build: .
     image: "weather-app:latest"
+    restart: on-failure
+    networks:
+      - proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.server.rule=Host(`gamma.localhost`)"
-      - "traefik.http.routers.server.entrypoints=web"
+      - "traefik.http.routers.server.rule=Host(`server.gamma.localhost`)"
+      - "traefik.http.routers.server.entrypoints=websecure"
+      - "traefik.http.routers.server.tls=true"
       - "traefik.http.middlewares.server.ratelimit.average=100"
       - "traefik.http.middlewares.server.ratelimit.burst=50"
     command:
@@ -55,3 +100,7 @@ secrets:
     file: ./secrets/server_secret.txt
   api_key:
     file: ./secrets/api_key.txt
+
+networks:
+  proxy:
+    name: proxy
