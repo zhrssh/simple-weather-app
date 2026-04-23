@@ -1,15 +1,33 @@
 ---
 services:
+  traefik:
+    image: "traefik:v3.7.0-rc.2"
+    container_name: "traefik"
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
   server:
     build: .
-    image: weather-app:latest
+    image: "weather-app:latest"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.server.rule=Host(`gamma.localhost`)"
+      - "traefik.http.routers.server.entrypoints=web"
     command:
-      - gunicorn
-      - -c
-      - ./gunicorn.conf.py
-      - flaskr:create_app()
+      - "gunicorn"
+      - "-c"
+      - "./gunicorn.conf.py"
+      - "flaskr:create_app()"
     ports:
-      - "5000-5001:5000"
+      - "5000"
     environment:
       - SERVER_SECRET_KEY_FILE=/run/secrets/server_secret
       - WEATHER_API_KEY_FILE=/run/secrets/api_key
