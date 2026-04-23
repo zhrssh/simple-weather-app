@@ -5,6 +5,18 @@ DEFAULT_TIMEOUT = int(os.environ.get("DEFAULT_TIMEOUT", 10000))
 
 
 # HELPER FUNCTIONS
+def getSecret(key: str) -> str:
+    """Reads the secret file"""
+    # Check for _FILE suffix in environ
+    file_env = f"{key}_FILE"
+    if file_env in os.environ:
+        with open(os.environ.get(file_env, ""), 'r') as f:
+            return f.read().strip()
+
+    # Fall back to environment variable
+    return os.environ.get(key, "")
+
+
 def getLongAndLat(city: str, limit: int = 1, api_key: str = ""):
     """Fetches the longitude and latitude using Weather API Geocode"""
     if api_key == "":

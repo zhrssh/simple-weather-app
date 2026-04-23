@@ -1,0 +1,106 @@
+---
+services:
+  traefik:
+    image: "traefik:v3.7.0-rc.2"
+    container_name: "traefik"
+    restart: on-failure
+    networks:
+      - proxy
+    command:
+      # API & Dashboard
+      - "--api.insecure=false"
+      - "--api.dashboard=true"
+
+      # Attach the static configuration tls.yaml file that contains the tls configuration settings
+      - "--providers.file.filename=/dynamic/tls.yaml"
+
+      # Providers
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=proxy"
+
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls=true"
+
+      # Observability
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--metrics.prometheus=true"
+
+    # Traefik Dynamic configuration via Docker labels
+    labels:
+      - "traefik.enable=true"
+
+      # Dashboard router
+      - "traefik.http.routers.dashboard.rule=Host(`dashboard.gamma.localhost`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+
+      # Basic‑auth middleware
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$hwFVINtK$$mzCXQdJsbPuQd.uTSRsAM1"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth@docker"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./certs:/certs:ro"
+      - "./dynamic:/dynamic:ro"
+    security_opt:
+      - no-new-privileges:true
+
+  server:
+    build: .
+    image: "weather-app:latest"
+    restart: on-failure
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.server.rule=Host(`server.gamma.localhost`)"
+      - "traefik.http.routers.server.entrypoints=websecure"
+      - "traefik.http.routers.server.tls=true"
+      - "traefik.http.middlewares.server.ratelimit.average=100"
+      - "traefik.http.middlewares.server.ratelimit.burst=50"
+    command:
+      - "gunicorn"
+      - "-c"
+      - "./gunicorn.conf.py"
+      - "flaskr:create_app()"
+    ports:
+      - "5000"
+    environment:
+      - SERVER_SECRET_KEY_FILE=/run/secrets/server_secret
+      - WEATHER_API_KEY_FILE=/run/secrets/api_key
+    secrets:
+      - server_secret
+      - api_key
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.40"
+          memory: 200M
+        reservations:
+          cpus: "0.20"
+          memory: 100M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+secrets:
+  server_secret:
+    file: ./secrets/server_secret.txt
+  api_key:
+    file: ./secrets/api_key.txt
+
+networks:
+  proxy:
+    name: proxy
