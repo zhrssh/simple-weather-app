@@ -1,0 +1,19 @@
+---
+services:
+  app:
+    build: .
+    image: weather-app:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - SERVER_SECRET_KEY_FILE=/run/secrets/server_secret
+      - WEATHER_API_KEY_FILE=/run/secrets/api_key
+    secrets:
+      - server_secret
+      - api_key
+
+secrets:
+  server_secret:
+    file: ./secrets/server_secret.txt
+  api_key:
+    file: ./secrets/api_key.txt

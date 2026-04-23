@@ -11,6 +11,8 @@ def create_app(test_config=None):
     # Create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.wsgi_app = ProxyFix(app.wsgi_app)
+    
+    # Apply all config
     if test_config is None:
         app.config.from_object(config.Config())
     else:
