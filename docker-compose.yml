@@ -21,6 +21,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.server.rule=Host(`gamma.localhost`)"
       - "traefik.http.routers.server.entrypoints=web"
+      - "traefik.http.middlewares.server.ratelimit.average=100"
+      - "traefik.http.middlewares.server.ratelimit.burst=50"
     command:
       - "gunicorn"
       - "-c"
