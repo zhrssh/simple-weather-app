@@ -11,7 +11,7 @@ def create_app(test_config=None):
     # Create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.wsgi_app = ProxyFix(app.wsgi_app)
-    
+
     # Apply all config
     if test_config is None:
         app.config.from_object(config.Config())
@@ -19,6 +19,12 @@ def create_app(test_config=None):
         app.config.from_mapping(test_config)
 
     os.makedirs(app.instance_path, exist_ok=True)
+
+    # Health check
+    @app.route("/health", methods=["GET"])
+    def health():
+        """Used for health checks"""
+        return "", status.HTTP_OK_200
 
     # Routes
     @app.route("/", methods=["GET"])

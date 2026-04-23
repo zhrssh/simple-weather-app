@@ -2,7 +2,7 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 # Create non-root user
 RUN groupadd --system --gid 1001 appgroup && \
-    useradd --system --gid 1001 --uid 1001 --create-home appuser
+  useradd --system --gid 1001 --uid 1001 --create-home appuser
 
 WORKDIR /app
 
@@ -20,16 +20,16 @@ ENV UV_TOOL_BIN_DIR=/usr/local/bin
 
 # Install the project's dependencies using the lockfile and settings
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --no-install-project
+  --mount=type=bind,source=uv.lock,target=uv.lock \
+  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+  uv sync --locked --no-install-project
 
 # Install source
 COPY . /app
 RUN mkdir -p /app/instance && \
-    chown -R appuser:appgroup /app
+  chown -R appuser:appgroup /app
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked
+  uv sync --locked
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
@@ -39,6 +39,10 @@ ENTRYPOINT []
 
 # Run server
 USER appuser
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"
 
 # NOTE: Change to a WSGI server later
 CMD ["gunicorn", "-c", "./gunicorn.conf.py", "flaskr:create_app()"]

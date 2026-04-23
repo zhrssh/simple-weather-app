@@ -38,7 +38,6 @@ services:
       - api_key
     deploy:
       replicas: 2
-      endpoint_mode: vip
       resources:
         limits:
           cpus: "0.40"
