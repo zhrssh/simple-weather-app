@@ -43,6 +43,7 @@ services:
       - "traefik.http.routers.dashboard.tls=true"
 
       # Basic‑auth middleware
+      # Note: Change the default dashboard password here
       - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$hwFVINtK$$mzCXQdJsbPuQd.uTSRsAM1"
       - "traefik.http.routers.dashboard.middlewares=dashboard-auth@docker"
     ports:
