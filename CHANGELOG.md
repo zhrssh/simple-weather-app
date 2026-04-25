@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5
+
+- Added setup.sh for ease of project setup
+
 ## v0.4
 
 - Added SSL using self-signed certificate
